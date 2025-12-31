@@ -30,7 +30,7 @@ async function bootstrap() {
       transform: true,
     }));
     
-    // No global prefix - Vercel routing handles /api/v1
+    // Don't set global prefix - we handle URL rewriting below
     
     await app.init();
   }
@@ -38,23 +38,31 @@ async function bootstrap() {
 }
 
 module.exports = async (req, res) => {
-  // Handle CORS manually for Vercel
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept');
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  
-  // Handle preflight OPTIONS request
-  if (req.method === 'OPTIONS') {
-    res.status(204).end();
-    return;
+  try {
+    // Handle CORS manually for Vercel
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    
+    // Handle preflight OPTIONS request
+    if (req.method === 'OPTIONS') {
+      res.status(204).end();
+      return;
+    }
+    
+    // Strip /api/v1 prefix from URL since Vercel routing includes it
+    const originalUrl = req.url;
+    if (req.url.startsWith('/api/v1')) {
+      req.url = req.url.replace('/api/v1', '');
+    }
+    
+    console.log(`[Vercel] ${req.method} ${originalUrl} -> ${req.url}`);
+    
+    const server = await bootstrap();
+    server(req, res);
+  } catch (error) {
+    console.error('Error in Vercel handler:', error);
+    res.status(500).json({ error: 'Internal Server Error', message: error.message });
   }
-  
-  // Strip /api/v1 prefix from URL since Vercel routing includes it
-  if (req.url.startsWith('/api/v1')) {
-    req.url = req.url.replace('/api/v1', '');
-  }
-  
-  const server = await bootstrap();
-  server(req, res);
 };
