@@ -30,7 +30,7 @@ async function bootstrap() {
       transform: true,
     }));
     
-    app.setGlobalPrefix('api/v1');
+    // No global prefix - Vercel routing handles /api/v1
     
     await app.init();
   }
@@ -48,6 +48,11 @@ module.exports = async (req, res) => {
   if (req.method === 'OPTIONS') {
     res.status(204).end();
     return;
+  }
+  
+  // Strip /api/v1 prefix from URL since Vercel routing includes it
+  if (req.url.startsWith('/api/v1')) {
+    req.url = req.url.replace('/api/v1', '');
   }
   
   const server = await bootstrap();
