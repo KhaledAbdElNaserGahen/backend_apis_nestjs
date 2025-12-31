@@ -12,6 +12,7 @@ import { SettingsModule } from './settings/settings.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { FamilyModule } from './family/family.module';
 import { AdminModule } from './admin/admin.module';
+import { AppController } from './app.controller';
 
 @Module({
   imports: [
@@ -38,5 +39,6 @@ import { AdminModule } from './admin/admin.module';
     FamilyModule,
     AdminModule,
   ],
+  controllers: [AppController],
 })
 export class AppModule {}
