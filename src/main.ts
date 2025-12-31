@@ -14,11 +14,12 @@ async function bootstrap() {
       new ExpressAdapter(expressApp),
     );
     
-    // Enable CORS
+    // Enable CORS - Allow all origins including localhost
     app.enableCors({
-      origin: '*',
+      origin: true, // Allow all origins
       methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
       credentials: true,
+      allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
     });
     
     // Global validation pipe
