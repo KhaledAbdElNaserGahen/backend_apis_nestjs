@@ -25,8 +25,6 @@ import { AdminModule } from './admin/admin.module';
       synchronize: true,
       logging: process.env.NODE_ENV !== 'production',
       ssl: true,
-      useUnifiedTopology: true,
-      serverSelectionTimeoutMS: 30000,
     }),
     AuthModule,
     UsersModule,
