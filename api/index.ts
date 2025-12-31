@@ -38,6 +38,18 @@ async function bootstrap() {
 }
 
 module.exports = async (req, res) => {
+  // Handle CORS manually for Vercel
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  
+  // Handle preflight OPTIONS request
+  if (req.method === 'OPTIONS') {
+    res.status(204).end();
+    return;
+  }
+  
   const server = await bootstrap();
   server(req, res);
 };
