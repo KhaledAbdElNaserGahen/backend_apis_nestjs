@@ -4,13 +4,15 @@ import { AppModule } from './app.module';
 import { ExpressAdapter } from '@nestjs/platform-express';
 import express from 'express';
 
-const server = express();
-let cachedApp;
+const expressApp = express();
+let app;
 
 async function bootstrap() {
-  if (!cachedApp) {
-    const expressApp = new ExpressAdapter(server);
-    const app = await NestFactory.create(AppModule, expressApp);
+  if (!app) {
+    app = await NestFactory.create(
+      AppModule,
+      new ExpressAdapter(expressApp),
+    );
     
     // Enable CORS
     app.enableCors({
@@ -29,24 +31,12 @@ async function bootstrap() {
     app.setGlobalPrefix('api/v1');
     
     await app.init();
-    cachedApp = app;
   }
-  
-  return cachedApp;
+  return expressApp;
 }
 
-// For local development
-if (process.env.NODE_ENV !== 'production') {
-  bootstrap().then(() => {
-    const port = process.env.PORT || 3000;
-    server.listen(port, () => {
-      console.log(`🚀 Silent Connect API is running on: http://localhost:${port}/api/v1`);
-    });
-  });
-}
-
-// Export for Vercel serverless
 export default async (req, res) => {
-  await bootstrap();
-  return server(req, res);
+  const server = await bootstrap();
+  server(req, res);
 };
+
