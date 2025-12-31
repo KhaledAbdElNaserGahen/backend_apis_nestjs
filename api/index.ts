@@ -1,18 +1,12 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from '../src/app.module';
-import { ExpressAdapter } from '@nestjs/platform-express';
-import express from 'express';
 
-const server = express();
 let app;
 
 async function bootstrap() {
   if (!app) {
-    app = await NestFactory.create(
-      AppModule,
-      new ExpressAdapter(server),
-    );
+    app = await NestFactory.create(AppModule);
     
     // Enable CORS for all origins including localhost
     app.enableCors({
@@ -30,11 +24,9 @@ async function bootstrap() {
       transform: true,
     }));
     
-    // Don't set global prefix - we handle URL rewriting below
-    
     await app.init();
   }
-  return server;
+  return app;
 }
 
 module.exports = async (req, res) => {
@@ -59,8 +51,11 @@ module.exports = async (req, res) => {
     
     console.log(`[Vercel] ${req.method} ${originalUrl} -> ${req.url}`);
     
-    const server = await bootstrap();
-    server(req, res);
+    const nestApp = await bootstrap();
+    const httpAdapter = nestApp.getHttpAdapter();
+    const instance = httpAdapter.getInstance();
+    
+    instance(req, res);
   } catch (error) {
     console.error('Error in Vercel handler:', error);
     res.status(500).json({ error: 'Internal Server Error', message: error.message });
