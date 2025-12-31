@@ -19,6 +19,15 @@ import { CreateVideoDto } from './dto/create-video.dto';
 import { UpdateVideoDto } from './dto/update-video.dto';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
+import { existsSync, mkdirSync } from 'fs';
+
+// Use /tmp for Vercel serverless (only writable directory)
+const uploadDir = process.env.NODE_ENV === 'production' ? '/tmp/uploads/videos' : './uploads/videos';
+
+// Ensure directory exists
+if (!existsSync(uploadDir)) {
+  mkdirSync(uploadDir, { recursive: true });
+}
 
 @Controller('videos')
 export class VideosController {
@@ -34,7 +43,7 @@ export class VideosController {
       ],
       {
         storage: diskStorage({
-          destination: './uploads/videos',
+          destination: uploadDir,
           filename: (req, file, callback) => {
             const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
             callback(null, `${file.fieldname}-${uniqueSuffix}${extname(file.originalname)}`);
