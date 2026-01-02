@@ -72,6 +72,9 @@ export class User {
   @Column({ default: 'active' })
   status: string;
 
+  @Column({ name: 'email_verified', default: false })
+  emailVerified: boolean;
+
   @Column({ name: 'last_login', nullable: true })
   lastLogin: Date;
 

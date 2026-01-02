@@ -27,10 +27,10 @@ export class ClinicsController {
 
   @Get(':id/doctors')
   async getDoctors(@Param('id') id: number) {
-    // TODO: Implement doctors by clinic
+    const doctors = await this.clinicsService.getDoctorsByClinic(id);
     return {
       success: true,
-      doctors: [],
+      data: doctors,
     };
   }
 }

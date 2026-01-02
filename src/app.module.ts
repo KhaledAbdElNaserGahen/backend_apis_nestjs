@@ -12,6 +12,12 @@ import { SettingsModule } from './settings/settings.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { FamilyModule } from './family/family.module';
 import { AdminModule } from './admin/admin.module';
+import { AppointmentsModule } from './appointments/appointments.module';
+import { ReviewsModule } from './reviews/reviews.module';
+import { PrescriptionsModule } from './prescriptions/prescriptions.module';
+import { SearchModule } from './search/search.module';
+import { DoctorProfilesModule } from './doctor-profiles/doctor-profiles.module';
+import { ChatModule } from './chat/chat.module';
 import { AppController } from './app.controller';
 
 @Module({
@@ -38,6 +44,12 @@ import { AppController } from './app.controller';
     NotificationsModule,
     FamilyModule,
     AdminModule,
+    AppointmentsModule,
+    ReviewsModule,
+    PrescriptionsModule,
+    SearchModule,
+    DoctorProfilesModule,
+    ChatModule,
   ],
   controllers: [AppController],
 })
