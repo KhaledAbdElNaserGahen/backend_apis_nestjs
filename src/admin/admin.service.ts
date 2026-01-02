@@ -1,11 +1,15 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../users/entities/user.entity';
 import { Clinic } from '../clinics/entities/clinic.entity';
+import { Role } from './entities/role.entity';
 import { UpdateUserRoleDto } from './dto/update-user-role.dto';
 import { ApproveUserDto } from './dto/approve-user.dto';
 import { CreateClinicDto } from './dto/create-clinic.dto';
+import { CreateRoleDto } from './dto/create-role.dto';
+import { UpdateRoleDto } from './dto/update-role.dto';
+import { ObjectId } from 'mongodb';
 
 @Injectable()
 export class AdminService {
@@ -14,6 +18,8 @@ export class AdminService {
     private usersRepository: Repository<User>,
     @InjectRepository(Clinic)
     private clinicsRepository: Repository<Clinic>,
+    @InjectRepository(Role)
+    private rolesRepository: Repository<Role>,
   ) {}
 
   async getUsers(filters?: any): Promise<User[]> {
@@ -133,5 +139,101 @@ export class AdminService {
     }
 
     await this.usersRepository.remove(user);
+  }
+
+  // ==================== Role Management ====================
+  
+  async createRole(createRoleDto: CreateRoleDto): Promise<Role> {
+    // Check if role with same name already exists
+    const existingRole = await this.rolesRepository.findOne({
+      where: { name: createRoleDto.name } as any,
+    });
+
+    if (existingRole) {
+      throw new ConflictException('Role with this name already exists');
+    }
+
+    const role = this.rolesRepository.create({
+      id: new ObjectId().toString(),
+      name: createRoleDto.name.toLowerCase().replace(/\s+/g, '_'),
+      displayName: createRoleDto.displayName,
+      description: createRoleDto.description,
+      permissions: createRoleDto.permissions,
+      isActive: true,
+      isSystemRole: false,
+    });
+
+    return await this.rolesRepository.save(role);
+  }
+
+  async getRoles(): Promise<Role[]> {
+    return await this.rolesRepository.find({
+      order: { created_at: 'DESC' } as any,
+    });
+  }
+
+  async getRole(roleId: string): Promise<Role> {
+    const role = await this.rolesRepository.findOne({
+      where: { id: roleId } as any,
+    });
+
+    if (!role) {
+      throw new NotFoundException('Role not found');
+    }
+
+    return role;
+  }
+
+  async updateRole(roleId: string, updateRoleDto: UpdateRoleDto): Promise<Role> {
+    const role = await this.getRole(roleId);
+
+    if (role.isSystemRole) {
+      throw new BadRequestException('Cannot modify system role');
+    }
+
+    if (updateRoleDto.displayName !== undefined) {
+      role.displayName = updateRoleDto.displayName;
+    }
+
+    if (updateRoleDto.description !== undefined) {
+      role.description = updateRoleDto.description;
+    }
+
+    if (updateRoleDto.permissions !== undefined) {
+      role.permissions = updateRoleDto.permissions;
+    }
+
+    if (updateRoleDto.isActive !== undefined) {
+      role.isActive = updateRoleDto.isActive;
+    }
+
+    return await this.rolesRepository.save(role);
+  }
+
+  async deleteRole(roleId: string): Promise<void> {
+    const role = await this.getRole(roleId);
+
+    if (role.isSystemRole) {
+      throw new BadRequestException('Cannot delete system role');
+    }
+
+    // Check if any users have this role
+    const usersWithRole = await this.usersRepository.count({
+      where: { role: role.name } as any,
+    });
+
+    if (usersWithRole > 0) {
+      throw new BadRequestException(
+        `Cannot delete role. ${usersWithRole} user(s) still have this role assigned`,
+      );
+    }
+
+    await this.rolesRepository.remove(role);
+  }
+
+  async getRoleByName(roleName: string): Promise<Role | null> {
+    return await this.rolesRepository.findOne({
+      where: { name: roleName } as any,
+    });
   }
 }

@@ -16,6 +16,9 @@ import { AdminService } from './admin.service';
 import { UpdateUserRoleDto } from './dto/update-user-role.dto';
 import { ApproveUserDto } from './dto/approve-user.dto';
 import { CreateClinicDto } from './dto/create-clinic.dto';
+import { CreateRoleDto } from './dto/create-role.dto';
+import { UpdateRoleDto } from './dto/update-role.dto';
+import { PERMISSIONS, PERMISSION_GROUPS } from './constants/permissions';
 
 @Controller('admin')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -77,6 +80,66 @@ export class AdminController {
     return {
       success: true,
       message: 'User deleted successfully',
+    };
+  }
+
+  // ==================== Role Management ====================
+
+  @Get('permissions')
+  async getPermissions() {
+    return {
+      success: true,
+      data: {
+        permissions: PERMISSIONS,
+        groups: PERMISSION_GROUPS,
+      },
+    };
+  }
+
+  @Post('roles')
+  async createRole(@Body() createRoleDto: CreateRoleDto) {
+    const role = await this.adminService.createRole(createRoleDto);
+    return {
+      success: true,
+      data: { role },
+      message: 'Role created successfully',
+    };
+  }
+
+  @Get('roles')
+  async getRoles() {
+    const roles = await this.adminService.getRoles();
+    return {
+      success: true,
+      data: { roles },
+    };
+  }
+
+  @Get('roles/:id')
+  async getRole(@Param('id') id: string) {
+    const role = await this.adminService.getRole(id);
+    return {
+      success: true,
+      data: { role },
+    };
+  }
+
+  @Put('roles/:id')
+  async updateRole(@Param('id') id: string, @Body() updateRoleDto: UpdateRoleDto) {
+    const role = await this.adminService.updateRole(id, updateRoleDto);
+    return {
+      success: true,
+      data: { role },
+      message: 'Role updated successfully',
+    };
+  }
+
+  @Delete('roles/:id')
+  async deleteRole(@Param('id') id: string) {
+    await this.adminService.deleteRole(id);
+    return {
+      success: true,
+      message: 'Role deleted successfully',
     };
   }
 }
