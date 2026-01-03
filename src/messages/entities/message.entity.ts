@@ -24,6 +24,9 @@ export class Message {
   @Column({ type: 'text' })
   message: string;
 
+  @Column({ type: 'text', nullable: true })
+  data: string;
+
   @Column({
     type: 'enum',
     enum: ['text', 'image', 'video', 'audio'],

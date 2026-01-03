@@ -35,4 +35,10 @@ export class Clinic {
 
   @Column({ name: 'next_available', nullable: true })
   nextAvailable: Date;
+
+  @Column({ nullable: true })
+  address: string;
+
+  @Column({ type: 'float', nullable: true, default: 0 })
+  rating: number;
 }

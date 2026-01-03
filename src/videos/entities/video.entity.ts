@@ -27,6 +27,9 @@ export class Video {
   @Column({ nullable: true })
   thumbnail_path: string;
 
+  @Column({ nullable: true })
+  thumbnailUrl: string;
+
   @Column({ name: 'user_id' })
   userId: string;
 
