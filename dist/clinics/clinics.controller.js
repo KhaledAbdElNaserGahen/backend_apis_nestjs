@@ -35,9 +35,10 @@ let ClinicsController = class ClinicsController {
         };
     }
     async getDoctors(id) {
+        const doctors = await this.clinicsService.getDoctorsByClinic(id);
         return {
             success: true,
-            doctors: [],
+            data: doctors,
         };
     }
 };

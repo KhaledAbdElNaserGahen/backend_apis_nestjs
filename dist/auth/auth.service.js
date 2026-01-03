@@ -51,6 +51,8 @@ let AuthService = class AuthService {
     constructor(usersService, jwtService) {
         this.usersService = usersService;
         this.jwtService = jwtService;
+        this.resetCodes = new Map();
+        this.verificationCodes = new Map();
     }
     async register(registerDto) {
         const hashedPassword = await bcrypt.hash(registerDto.password, 10);
@@ -97,6 +99,86 @@ let AuthService = class AuthService {
     async validateUser(userId) {
         const userIdStr = typeof userId === 'number' ? userId.toString() : userId;
         return this.usersService.findOne(userIdStr);
+    }
+    async forgotPassword(forgotPasswordDto) {
+        const user = await this.usersService.findByEmail(forgotPasswordDto.email);
+        if (!user) {
+            return {
+                success: true,
+                message: 'If the email exists, a reset code has been sent',
+            };
+        }
+        const code = Math.floor(100000 + Math.random() * 900000).toString();
+        const expiry = new Date(Date.now() + 15 * 60 * 1000);
+        this.resetCodes.set(forgotPasswordDto.email, { code, expiry });
+        console.log(`Password reset code for ${forgotPasswordDto.email}: ${code}`);
+        return {
+            success: true,
+            message: 'Reset code sent to your email',
+            dev: { code },
+        };
+    }
+    async resetPassword(resetPasswordDto) {
+        const stored = this.resetCodes.get(resetPasswordDto.email);
+        if (!stored) {
+            throw new common_1.BadRequestException('Invalid or expired reset code');
+        }
+        if (stored.expiry < new Date()) {
+            this.resetCodes.delete(resetPasswordDto.email);
+            throw new common_1.BadRequestException('Reset code has expired');
+        }
+        if (stored.code !== resetPasswordDto.code) {
+            throw new common_1.BadRequestException('Invalid reset code');
+        }
+        const user = await this.usersService.findByEmail(resetPasswordDto.email);
+        if (!user) {
+            throw new common_1.BadRequestException('User not found');
+        }
+        const hashedPassword = await bcrypt.hash(resetPasswordDto.newPassword, 10);
+        await this.usersService.update(user.id, { password: hashedPassword });
+        this.resetCodes.delete(resetPasswordDto.email);
+        return {
+            success: true,
+            message: 'Password reset successfully',
+        };
+    }
+    async sendVerificationEmail(email) {
+        const user = await this.usersService.findByEmail(email);
+        if (!user) {
+            throw new common_1.BadRequestException('User not found');
+        }
+        const code = Math.floor(100000 + Math.random() * 900000).toString();
+        const expiry = new Date(Date.now() + 30 * 60 * 1000);
+        this.verificationCodes.set(email, { code, expiry });
+        console.log(`Verification code for ${email}: ${code}`);
+        return {
+            success: true,
+            message: 'Verification code sent to your email',
+            dev: { code },
+        };
+    }
+    async verifyEmail(verifyEmailDto) {
+        const stored = this.verificationCodes.get(verifyEmailDto.email);
+        if (!stored) {
+            throw new common_1.BadRequestException('Invalid or expired verification code');
+        }
+        if (stored.expiry < new Date()) {
+            this.verificationCodes.delete(verifyEmailDto.email);
+            throw new common_1.BadRequestException('Verification code has expired');
+        }
+        if (stored.code !== verifyEmailDto.code) {
+            throw new common_1.BadRequestException('Invalid verification code');
+        }
+        const user = await this.usersService.findByEmail(verifyEmailDto.email);
+        if (!user) {
+            throw new common_1.BadRequestException('User not found');
+        }
+        await this.usersService.update(user.id, { emailVerified: true });
+        this.verificationCodes.delete(verifyEmailDto.email);
+        return {
+            success: true,
+            message: 'Email verified successfully',
+        };
     }
 };
 exports.AuthService = AuthService;

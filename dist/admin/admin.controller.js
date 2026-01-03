@@ -21,6 +21,9 @@ const admin_service_1 = require("./admin.service");
 const update_user_role_dto_1 = require("./dto/update-user-role.dto");
 const approve_user_dto_1 = require("./dto/approve-user.dto");
 const create_clinic_dto_1 = require("./dto/create-clinic.dto");
+const create_role_dto_1 = require("./dto/create-role.dto");
+const update_role_dto_1 = require("./dto/update-role.dto");
+const permissions_1 = require("./constants/permissions");
 let AdminController = class AdminController {
     constructor(adminService) {
         this.adminService = adminService;
@@ -70,6 +73,52 @@ let AdminController = class AdminController {
             message: 'User deleted successfully',
         };
     }
+    async getPermissions() {
+        return {
+            success: true,
+            data: {
+                permissions: permissions_1.PERMISSIONS,
+                groups: permissions_1.PERMISSION_GROUPS,
+            },
+        };
+    }
+    async createRole(createRoleDto) {
+        const role = await this.adminService.createRole(createRoleDto);
+        return {
+            success: true,
+            data: { role },
+            message: 'Role created successfully',
+        };
+    }
+    async getRoles() {
+        const roles = await this.adminService.getRoles();
+        return {
+            success: true,
+            data: { roles },
+        };
+    }
+    async getRole(id) {
+        const role = await this.adminService.getRole(id);
+        return {
+            success: true,
+            data: { role },
+        };
+    }
+    async updateRole(id, updateRoleDto) {
+        const role = await this.adminService.updateRole(id, updateRoleDto);
+        return {
+            success: true,
+            data: { role },
+            message: 'Role updated successfully',
+        };
+    }
+    async deleteRole(id) {
+        await this.adminService.deleteRole(id);
+        return {
+            success: true,
+            message: 'Role deleted successfully',
+        };
+    }
 };
 exports.AdminController = AdminController;
 __decorate([
@@ -113,6 +162,47 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], AdminController.prototype, "deleteUser", null);
+__decorate([
+    (0, common_1.Get)('permissions'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], AdminController.prototype, "getPermissions", null);
+__decorate([
+    (0, common_1.Post)('roles'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [create_role_dto_1.CreateRoleDto]),
+    __metadata("design:returntype", Promise)
+], AdminController.prototype, "createRole", null);
+__decorate([
+    (0, common_1.Get)('roles'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], AdminController.prototype, "getRoles", null);
+__decorate([
+    (0, common_1.Get)('roles/:id'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], AdminController.prototype, "getRole", null);
+__decorate([
+    (0, common_1.Put)('roles/:id'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, update_role_dto_1.UpdateRoleDto]),
+    __metadata("design:returntype", Promise)
+], AdminController.prototype, "updateRole", null);
+__decorate([
+    (0, common_1.Delete)('roles/:id'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], AdminController.prototype, "deleteRole", null);
 exports.AdminController = AdminController = __decorate([
     (0, common_1.Controller)('admin'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),

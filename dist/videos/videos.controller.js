@@ -21,11 +21,7 @@ const create_video_dto_1 = require("./dto/create-video.dto");
 const update_video_dto_1 = require("./dto/update-video.dto");
 const multer_1 = require("multer");
 const path_1 = require("path");
-const fs_1 = require("fs");
-const uploadDir = process.env.NODE_ENV === 'production' ? '/tmp/uploads/videos' : './uploads/videos';
-if (!(0, fs_1.existsSync)(uploadDir)) {
-    (0, fs_1.mkdirSync)(uploadDir, { recursive: true });
-}
+const uploadDir = '/tmp/uploads/videos';
 let VideosController = class VideosController {
     constructor(videosService) {
         this.videosService = videosService;
@@ -96,7 +92,14 @@ __decorate([
         { name: 'thumbnail', maxCount: 1 },
     ], {
         storage: (0, multer_1.diskStorage)({
-            destination: uploadDir,
+            destination: (req, file, callback) => {
+                const uploadDir = '/tmp/uploads/videos';
+                const fs = require('fs');
+                if (!fs.existsSync(uploadDir)) {
+                    fs.mkdirSync(uploadDir, { recursive: true });
+                }
+                callback(null, uploadDir);
+            },
             filename: (req, file, callback) => {
                 const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
                 callback(null, `${file.fieldname}-${uniqueSuffix}${(0, path_1.extname)(file.originalname)}`);

@@ -96,6 +96,20 @@ export class MessagesService {
     return await this.messagesRepository.save(message);
   }
 
+  async findOne(messageId: string | number): Promise<Message> {
+    const messageIdStr = typeof messageId === 'number' ? messageId.toString() : messageId;
+    
+    const message = await this.messagesRepository.findOne({
+      where: { id: messageIdStr } as any,
+    });
+
+    if (!message) {
+      throw new NotFoundException('Message not found');
+    }
+
+    return message;
+  }
+
   async markAllAsRead(userId: string | number, otherUserId: string | number): Promise<void> {
     const userIdStr = typeof userId === 'number' ? userId.toString() : userId;
     const otherUserIdStr = typeof otherUserId === 'number' ? otherUserId.toString() : otherUserId;

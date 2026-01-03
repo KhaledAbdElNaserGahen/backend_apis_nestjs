@@ -70,14 +70,14 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       // If receiver is online, send them the message
       if (receiverSocketId) {
         this.server.to(receiverSocketId).emit('receive-message', {
-          message: result.data.message,
+          message: result,
         });
       }
 
       // Send confirmation to sender
       return {
         success: true,
-        data: result.data.message,
+        data: result,
       };
     } catch (error) {
       return {

@@ -17,9 +17,11 @@ const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const clinic_entity_1 = require("./entities/clinic.entity");
+const user_entity_1 = require("../users/entities/user.entity");
 let ClinicsService = class ClinicsService {
-    constructor(clinicsRepository) {
+    constructor(clinicsRepository, usersRepository) {
         this.clinicsRepository = clinicsRepository;
+        this.usersRepository = usersRepository;
     }
     findAll() {
         return this.clinicsRepository.find();
@@ -28,11 +30,34 @@ let ClinicsService = class ClinicsService {
         const idStr = typeof id === 'number' ? id.toString() : id;
         return this.clinicsRepository.findOne({ where: { id: idStr } });
     }
+    async getDoctorsByClinic(clinicId) {
+        const idStr = typeof clinicId === 'number' ? clinicId.toString() : clinicId;
+        const doctors = await this.usersRepository.find({
+            where: { role: 'doctor' },
+        });
+        const clinicDoctors = await this.clinicsRepository.find({
+            where: { id: idStr },
+        });
+        const doctorIds = clinicDoctors
+            .map(clinic => clinic.doctorId)
+            .filter(id => id);
+        const filteredDoctors = doctors.filter(doctor => doctorIds.includes(doctor.id));
+        return filteredDoctors.map(doctor => ({
+            id: doctor.id,
+            name: doctor.name,
+            specialty: doctor.job,
+            phone: doctor.phone,
+            email: doctor.email,
+            gender: doctor.gender,
+        }));
+    }
 };
 exports.ClinicsService = ClinicsService;
 exports.ClinicsService = ClinicsService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(clinic_entity_1.Clinic)),
-    __metadata("design:paramtypes", [typeorm_2.Repository])
+    __param(1, (0, typeorm_1.InjectRepository)(user_entity_1.User)),
+    __metadata("design:paramtypes", [typeorm_2.Repository,
+        typeorm_2.Repository])
 ], ClinicsService);
 //# sourceMappingURL=clinics.service.js.map

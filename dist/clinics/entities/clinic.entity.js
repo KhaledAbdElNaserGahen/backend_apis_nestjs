@@ -59,6 +59,14 @@ __decorate([
     (0, typeorm_1.Column)({ name: 'next_available', nullable: true }),
     __metadata("design:type", Date)
 ], Clinic.prototype, "nextAvailable", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", String)
+], Clinic.prototype, "address", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'float', nullable: true, default: 0 }),
+    __metadata("design:type", Number)
+], Clinic.prototype, "rating", void 0);
 exports.Clinic = Clinic = __decorate([
     (0, typeorm_1.Entity)('clinics')
 ], Clinic);

@@ -21,6 +21,13 @@ const settings_module_1 = require("./settings/settings.module");
 const notifications_module_1 = require("./notifications/notifications.module");
 const family_module_1 = require("./family/family.module");
 const admin_module_1 = require("./admin/admin.module");
+const appointments_module_1 = require("./appointments/appointments.module");
+const reviews_module_1 = require("./reviews/reviews.module");
+const prescriptions_module_1 = require("./prescriptions/prescriptions.module");
+const search_module_1 = require("./search/search.module");
+const doctor_profiles_module_1 = require("./doctor-profiles/doctor-profiles.module");
+const chat_module_1 = require("./chat/chat.module");
+const app_controller_1 = require("./app.controller");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -36,6 +43,9 @@ exports.AppModule = AppModule = __decorate([
                 entities: [__dirname + '/**/*.entity{.ts,.js}'],
                 synchronize: true,
                 logging: process.env.NODE_ENV !== 'production',
+                useUnifiedTopology: true,
+                ssl: true,
+                tlsAllowInvalidCertificates: true,
             }),
             auth_module_1.AuthModule,
             users_module_1.UsersModule,
@@ -48,7 +58,14 @@ exports.AppModule = AppModule = __decorate([
             notifications_module_1.NotificationsModule,
             family_module_1.FamilyModule,
             admin_module_1.AdminModule,
+            appointments_module_1.AppointmentsModule,
+            reviews_module_1.ReviewsModule,
+            prescriptions_module_1.PrescriptionsModule,
+            search_module_1.SearchModule,
+            doctor_profiles_module_1.DoctorProfilesModule,
+            chat_module_1.ChatModule,
         ],
+        controllers: [app_controller_1.AppController],
     })
 ], AppModule);
 //# sourceMappingURL=app.module.js.map

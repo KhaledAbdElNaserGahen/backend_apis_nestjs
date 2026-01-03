@@ -18,10 +18,13 @@ const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const user_entity_1 = require("../users/entities/user.entity");
 const clinic_entity_1 = require("../clinics/entities/clinic.entity");
+const role_entity_1 = require("./entities/role.entity");
+const mongodb_1 = require("mongodb");
 let AdminService = class AdminService {
-    constructor(usersRepository, clinicsRepository) {
+    constructor(usersRepository, clinicsRepository, rolesRepository) {
         this.usersRepository = usersRepository;
         this.clinicsRepository = clinicsRepository;
+        this.rolesRepository = rolesRepository;
     }
     async getUsers(filters) {
         const where = {};
@@ -116,13 +119,84 @@ let AdminService = class AdminService {
         }
         await this.usersRepository.remove(user);
     }
+    async createRole(createRoleDto) {
+        const existingRole = await this.rolesRepository.findOne({
+            where: { name: createRoleDto.name },
+        });
+        if (existingRole) {
+            throw new common_1.ConflictException('Role with this name already exists');
+        }
+        const role = this.rolesRepository.create({
+            id: new mongodb_1.ObjectId().toString(),
+            name: createRoleDto.name.toLowerCase().replace(/\s+/g, '_'),
+            displayName: createRoleDto.displayName,
+            description: createRoleDto.description,
+            permissions: createRoleDto.permissions,
+            isActive: true,
+            isSystemRole: false,
+        });
+        return await this.rolesRepository.save(role);
+    }
+    async getRoles() {
+        return await this.rolesRepository.find({
+            order: { created_at: 'DESC' },
+        });
+    }
+    async getRole(roleId) {
+        const role = await this.rolesRepository.findOne({
+            where: { id: roleId },
+        });
+        if (!role) {
+            throw new common_1.NotFoundException('Role not found');
+        }
+        return role;
+    }
+    async updateRole(roleId, updateRoleDto) {
+        const role = await this.getRole(roleId);
+        if (role.isSystemRole) {
+            throw new common_1.BadRequestException('Cannot modify system role');
+        }
+        if (updateRoleDto.displayName !== undefined) {
+            role.displayName = updateRoleDto.displayName;
+        }
+        if (updateRoleDto.description !== undefined) {
+            role.description = updateRoleDto.description;
+        }
+        if (updateRoleDto.permissions !== undefined) {
+            role.permissions = updateRoleDto.permissions;
+        }
+        if (updateRoleDto.isActive !== undefined) {
+            role.isActive = updateRoleDto.isActive;
+        }
+        return await this.rolesRepository.save(role);
+    }
+    async deleteRole(roleId) {
+        const role = await this.getRole(roleId);
+        if (role.isSystemRole) {
+            throw new common_1.BadRequestException('Cannot delete system role');
+        }
+        const usersWithRole = await this.usersRepository.count({
+            where: { role: role.name },
+        });
+        if (usersWithRole > 0) {
+            throw new common_1.BadRequestException(`Cannot delete role. ${usersWithRole} user(s) still have this role assigned`);
+        }
+        await this.rolesRepository.remove(role);
+    }
+    async getRoleByName(roleName) {
+        return await this.rolesRepository.findOne({
+            where: { name: roleName },
+        });
+    }
 };
 exports.AdminService = AdminService;
 exports.AdminService = AdminService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(user_entity_1.User)),
     __param(1, (0, typeorm_1.InjectRepository)(clinic_entity_1.Clinic)),
+    __param(2, (0, typeorm_1.InjectRepository)(role_entity_1.Role)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
+        typeorm_2.Repository,
         typeorm_2.Repository])
 ], AdminService);
 //# sourceMappingURL=admin.service.js.map

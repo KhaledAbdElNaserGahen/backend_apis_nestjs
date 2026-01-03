@@ -14,6 +14,9 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MessagesController = void 0;
 const common_1 = require("@nestjs/common");
+const platform_express_1 = require("@nestjs/platform-express");
+const multer_1 = require("multer");
+const path_1 = require("path");
 const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
 const messages_service_1 = require("./messages.service");
 const send_message_dto_1 = require("./dto/send-message.dto");
@@ -42,6 +45,29 @@ let MessagesController = class MessagesController {
             data: { message },
             message: 'Message sent successfully',
         };
+    }
+    async sendMessageWithFile(req, sendMessageDto, file) {
+        const messageType = this.getMessageType(file.mimetype);
+        const mediaPath = file.path.replace(/\\/g, '/');
+        const message = await this.messagesService.sendMessage({
+            ...sendMessageDto,
+            message_type: messageType,
+            media_path: mediaPath,
+        }, req.user.id);
+        return {
+            success: true,
+            data: { message },
+            message: 'Message with file sent successfully',
+        };
+    }
+    getMessageType(mimetype) {
+        if (mimetype.startsWith('image/'))
+            return 'image';
+        if (mimetype.startsWith('video/'))
+            return 'video';
+        if (mimetype.startsWith('audio/'))
+            return 'audio';
+        return 'file';
     }
     async markAsRead(req, id) {
         const message = await this.messagesService.markAsRead(+id, req.user.id);
@@ -89,6 +115,34 @@ __decorate([
     __metadata("design:paramtypes", [Object, send_message_dto_1.SendMessageDto]),
     __metadata("design:returntype", Promise)
 ], MessagesController.prototype, "sendMessage", null);
+__decorate([
+    (0, common_1.Post)('send-with-file'),
+    (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('file', {
+        storage: (0, multer_1.diskStorage)({
+            destination: './uploads/messages',
+            filename: (req, file, callback) => {
+                const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+                const ext = (0, path_1.extname)(file.originalname);
+                callback(null, `${file.fieldname}-${uniqueSuffix}${ext}`);
+            },
+        }),
+        fileFilter: (req, file, callback) => {
+            if (!file.mimetype.match(/\/(jpg|jpeg|png|gif|mp4|mp3|pdf|doc|docx)$/)) {
+                return callback(new Error('Only image, video, audio, and document files are allowed!'), false);
+            }
+            callback(null, true);
+        },
+        limits: {
+            fileSize: 10 * 1024 * 1024,
+        },
+    })),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Body)()),
+    __param(2, (0, common_1.UploadedFile)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, send_message_dto_1.SendMessageDto, Object]),
+    __metadata("design:returntype", Promise)
+], MessagesController.prototype, "sendMessageWithFile", null);
 __decorate([
     (0, common_1.Put)(':id/read'),
     __param(0, (0, common_1.Request)()),

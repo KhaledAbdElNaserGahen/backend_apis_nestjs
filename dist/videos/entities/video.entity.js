@@ -40,6 +40,10 @@ __decorate([
     __metadata("design:type", String)
 ], Video.prototype, "thumbnail_path", void 0);
 __decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", String)
+], Video.prototype, "thumbnailUrl", void 0);
+__decorate([
     (0, typeorm_1.Column)({ name: 'user_id' }),
     __metadata("design:type", String)
 ], Video.prototype, "userId", void 0);

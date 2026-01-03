@@ -36,6 +36,10 @@ __decorate([
     __metadata("design:type", String)
 ], Message.prototype, "message", void 0);
 __decorate([
+    (0, typeorm_1.Column)({ type: 'text', nullable: true }),
+    __metadata("design:type", String)
+], Message.prototype, "data", void 0);
+__decorate([
     (0, typeorm_1.Column)({
         type: 'enum',
         enum: ['text', 'image', 'video', 'audio'],
