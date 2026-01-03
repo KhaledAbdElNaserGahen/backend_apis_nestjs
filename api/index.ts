@@ -1,31 +1,32 @@
-import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
-import { AppModule } from '../dist/app.module';
-
-let app;
-let isBootstrapping = false;
-
-async function bootstrap() {
-  if (app) {
-    return app;
-  }
-  
-  // Prevent multiple bootstrap attempts
-  if (isBootstrapping) {
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    return bootstrap();
-  }
-  
+export default async (req, res) => {
   try {
-    isBootstrapping = true;
-    console.log('[Vercel] Bootstrapping NestJS application...');
+    console.log('[START] Request received:', req.method, req.url);
     
-    app = await NestFactory.create(AppModule, {
-      logger: ['error', 'warn'],
+    // Set CORS headers
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, X-Requested-With');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    
+    // Handle preflight OPTIONS request
+    if (req.method === 'OPTIONS') {
+      console.log('[OPTIONS] Sending 204');
+      res.status(204).end();
+      return;
+    }
+    
+    console.log('[IMPORT] Loading dependencies...');
+    const { NestFactory } = require('@nestjs/core');
+    const { ValidationPipe } = require('@nestjs/common');
+    const { AppModule } = require('../dist/app.module');
+    
+    console.log('[BOOTSTRAP] Creating NestJS app...');
+    const nestApp = await NestFactory.create(AppModule, {
+      logger: ['error', 'warn', 'log'],
     });
     
-    // Enable CORS for all origins
-    app.enableCors({
+    console.log('[CORS] Enabling CORS...');
+    nestApp.enableCors({
       origin: true,
       methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
       credentials: true,
@@ -35,53 +36,32 @@ async function bootstrap() {
       optionsSuccessStatus: 204,
     });
     
-    app.useGlobalPipes(new ValidationPipe({
+    console.log('[PIPES] Setting up validation...');
+    nestApp.useGlobalPipes(new ValidationPipe({
       whitelist: true,
       transform: true,
     }));
     
-    // Set global prefix for routes
-    app.setGlobalPrefix('api/v1');
+    console.log('[PREFIX] Setting global prefix...');
+    nestApp.setGlobalPrefix('api/v1');
     
-    await app.init();
+    console.log('[INIT] Initializing app...');
+    await nestApp.init();
     
-    console.log('[Vercel] NestJS application bootstrapped successfully');
-    isBootstrapping = false;
-    return app;
-  } catch (error) {
-    isBootstrapping = false;
-    console.error('[Vercel] Bootstrap failed:', error);
-    throw error;
-  }
-}
-
-export default async (req, res) => {
-  try {
-    // Set CORS headers
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, X-Requested-With');
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
-    
-    // Handle preflight OPTIONS request
-    if (req.method === 'OPTIONS') {
-      res.status(204).end();
-      return;
-    }
-    
-    console.log(`[Vercel] ${req.method} ${req.url}`);
-    
-    const nestApp = await bootstrap();
+    console.log('[HANDLER] Getting HTTP adapter...');
     const httpAdapter = nestApp.getHttpAdapter();
     const instance = httpAdapter.getInstance();
     
+    console.log('[EXECUTE] Running handler...');
     instance(req, res);
   } catch (error) {
-    console.error('[Vercel] Handler error:', error);
+    console.error('[ERROR] Handler error:', error);
+    console.error('[STACK]', error.stack);
     res.status(500).json({ 
       error: 'Internal Server Error', 
       message: error.message,
-      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      stack: error.stack,
+      details: 'Check Vercel logs for more information'
     });
   }
 };
