@@ -119,7 +119,14 @@ __decorate([
     (0, common_1.Post)('send-with-file'),
     (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('file', {
         storage: (0, multer_1.diskStorage)({
-            destination: './uploads/messages',
+            destination: (req, file, callback) => {
+                const uploadDir = '/tmp/uploads/messages';
+                const fs = require('fs');
+                if (!fs.existsSync(uploadDir)) {
+                    fs.mkdirSync(uploadDir, { recursive: true });
+                }
+                callback(null, uploadDir);
+            },
             filename: (req, file, callback) => {
                 const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
                 const ext = (0, path_1.extname)(file.originalname);

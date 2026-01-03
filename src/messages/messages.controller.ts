@@ -55,7 +55,14 @@ export class MessagesController {
   @UseInterceptors(
     FileInterceptor('file', {
       storage: diskStorage({
-        destination: './uploads/messages',
+        destination: (req, file, callback) => {
+          const uploadDir = '/tmp/uploads/messages';
+          const fs = require('fs');
+          if (!fs.existsSync(uploadDir)) {
+            fs.mkdirSync(uploadDir, { recursive: true });
+          }
+          callback(null, uploadDir);
+        },
         filename: (req, file, callback) => {
           const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
           const ext = extname(file.originalname);
