@@ -3,14 +3,30 @@ import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from '../src/app.module';
 
 let app;
+let isBootstrapping = false;
 
 async function bootstrap() {
-  if (!app) {
-    app = await NestFactory.create(AppModule);
+  if (app) {
+    return app;
+  }
+  
+  // Prevent multiple bootstrap attempts
+  if (isBootstrapping) {
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    return bootstrap();
+  }
+  
+  try {
+    isBootstrapping = true;
+    console.log('[Vercel] Bootstrapping NestJS application...');
     
-    // Enable CORS for all origins including localhost
+    app = await NestFactory.create(AppModule, {
+      logger: ['error', 'warn'],
+    });
+    
+    // Enable CORS for all origins
     app.enableCors({
-      origin: true, // Allow all origins
+      origin: true,
       methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
       credentials: true,
       allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With'],
@@ -28,13 +44,20 @@ async function bootstrap() {
     app.setGlobalPrefix('api/v1');
     
     await app.init();
+    
+    console.log('[Vercel] NestJS application bootstrapped successfully');
+    isBootstrapping = false;
+    return app;
+  } catch (error) {
+    isBootstrapping = false;
+    console.error('[Vercel] Bootstrap failed:', error);
+    throw error;
   }
-  return app;
 }
 
 export default async (req, res) => {
   try {
-    // Handle CORS manually for Vercel
+    // Set CORS headers
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, X-Requested-With');
@@ -54,7 +77,11 @@ export default async (req, res) => {
     
     instance(req, res);
   } catch (error) {
-    console.error('Error in Vercel handler:', error);
-    res.status(500).json({ error: 'Internal Server Error', message: error.message });
+    console.error('[Vercel] Handler error:', error);
+    res.status(500).json({ 
+      error: 'Internal Server Error', 
+      message: error.message,
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
   }
 };
