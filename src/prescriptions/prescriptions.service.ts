@@ -4,7 +4,7 @@ import { Repository } from 'typeorm';
 import { Prescription } from './entities/prescription.entity';
 import { CreatePrescriptionDto } from './dto/create-prescription.dto';
 import { UpdatePrescriptionDto } from './dto/update-prescription.dto';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
 
 @Injectable()
 export class PrescriptionsService {
@@ -16,7 +16,7 @@ export class PrescriptionsService {
   async create(createPrescriptionDto: CreatePrescriptionDto, doctorId: string) {
     const prescription = this.prescriptionsRepository.create({
       ...createPrescriptionDto,
-      id: uuidv4(),
+      id: randomUUID(),
       doctorId,
       validUntil: createPrescriptionDto.validUntil 
         ? new Date(createPrescriptionDto.validUntil)

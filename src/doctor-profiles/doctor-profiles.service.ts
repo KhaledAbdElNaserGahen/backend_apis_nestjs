@@ -4,7 +4,7 @@ import { Repository } from 'typeorm';
 import { DoctorProfile } from './entities/doctor-profile.entity';
 import { CreateDoctorProfileDto } from './dto/create-doctor-profile.dto';
 import { UpdateDoctorProfileDto } from './dto/update-doctor-profile.dto';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
 
 @Injectable()
 export class DoctorProfilesService {
@@ -25,7 +25,7 @@ export class DoctorProfilesService {
 
     const profile = this.doctorProfilesRepository.create({
       ...createDoctorProfileDto,
-      id: uuidv4(),
+      id: randomUUID(),
       doctorId,
     });
 
@@ -105,7 +105,7 @@ export class DoctorProfilesService {
     if (!profile) {
       // Create profile if doesn't exist
       const newProfile = this.doctorProfilesRepository.create({
-        id: uuidv4(),
+        id: randomUUID(),
         doctorId,
         specialty: 'General',
         averageRating: newRating,

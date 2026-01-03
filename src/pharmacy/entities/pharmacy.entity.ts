@@ -24,8 +24,14 @@ export class Pharmacy {
   @Column({ nullable: true })
   location: string;
 
+  @Column({ nullable: true })
+  city: string;
+
   @Column({ name: 'working_hours', nullable: true })
   workingHours: string;
+
+  @Column({ default: true })
+  isOpen: boolean;
 
   @Column({ name: 'owner_id', nullable: true })
   ownerId: string;
