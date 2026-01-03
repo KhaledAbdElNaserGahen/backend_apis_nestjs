@@ -17,7 +17,7 @@ const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const doctor_profile_entity_1 = require("./entities/doctor-profile.entity");
-const uuid_1 = require("uuid");
+const crypto_1 = require("crypto");
 let DoctorProfilesService = class DoctorProfilesService {
     constructor(doctorProfilesRepository) {
         this.doctorProfilesRepository = doctorProfilesRepository;
@@ -31,7 +31,7 @@ let DoctorProfilesService = class DoctorProfilesService {
         }
         const profile = this.doctorProfilesRepository.create({
             ...createDoctorProfileDto,
-            id: (0, uuid_1.v4)(),
+            id: (0, crypto_1.randomUUID)(),
             doctorId,
         });
         await this.doctorProfilesRepository.save(profile);
@@ -92,7 +92,7 @@ let DoctorProfilesService = class DoctorProfilesService {
         });
         if (!profile) {
             const newProfile = this.doctorProfilesRepository.create({
-                id: (0, uuid_1.v4)(),
+                id: (0, crypto_1.randomUUID)(),
                 doctorId,
                 specialty: 'General',
                 averageRating: newRating,

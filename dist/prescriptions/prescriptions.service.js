@@ -17,7 +17,7 @@ const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const prescription_entity_1 = require("./entities/prescription.entity");
-const uuid_1 = require("uuid");
+const crypto_1 = require("crypto");
 let PrescriptionsService = class PrescriptionsService {
     constructor(prescriptionsRepository) {
         this.prescriptionsRepository = prescriptionsRepository;
@@ -25,7 +25,7 @@ let PrescriptionsService = class PrescriptionsService {
     async create(createPrescriptionDto, doctorId) {
         const prescription = this.prescriptionsRepository.create({
             ...createPrescriptionDto,
-            id: (0, uuid_1.v4)(),
+            id: (0, crypto_1.randomUUID)(),
             doctorId,
             validUntil: createPrescriptionDto.validUntil
                 ? new Date(createPrescriptionDto.validUntil)

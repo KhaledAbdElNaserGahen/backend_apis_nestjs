@@ -46,12 +46,12 @@ let ChatGateway = class ChatGateway {
             const receiverSocketId = this.connectedUsers.get(data.receiverId);
             if (receiverSocketId) {
                 this.server.to(receiverSocketId).emit('receive-message', {
-                    message: result.data.message,
+                    message: result,
                 });
             }
             return {
                 success: true,
-                data: result.data.message,
+                data: result,
             };
         }
         catch (error) {

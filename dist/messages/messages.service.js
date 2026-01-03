@@ -85,6 +85,16 @@ let MessagesService = class MessagesService {
         message.read_at = new Date();
         return await this.messagesRepository.save(message);
     }
+    async findOne(messageId) {
+        const messageIdStr = typeof messageId === 'number' ? messageId.toString() : messageId;
+        const message = await this.messagesRepository.findOne({
+            where: { id: messageIdStr },
+        });
+        if (!message) {
+            throw new common_1.NotFoundException('Message not found');
+        }
+        return message;
+    }
     async markAllAsRead(userId, otherUserId) {
         const userIdStr = typeof userId === 'number' ? userId.toString() : userId;
         const otherUserIdStr = typeof otherUserId === 'number' ? otherUserId.toString() : otherUserId;
